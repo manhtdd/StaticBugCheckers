@@ -21,11 +21,5 @@
 echo ">>> Checking out and compiling the dataset"
 
 # Run a Python script to check out buggy versions using Defects4J
-echo ">>> Checking out buggy versions to:"
-python3 ${PY_SCRIPTS_ROOT}/CheckoutD4j.py ${D4J_ROOT} b
-echo
-
-# Run a Python script to check out fixed versions using Defects4J
-echo ">>> Checking out fixed versions to:"
-python3 ${PY_SCRIPTS_ROOT}/CheckoutD4j.py ${D4J_ROOT} f
+python3 ${PY_SCRIPTS_ROOT}/CheckoutV4j.py
 echo
