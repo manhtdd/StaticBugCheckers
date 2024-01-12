@@ -70,23 +70,7 @@ if __name__ == '__main__':
         os.makedirs(dist)
         
     projects = {
-        'Chart': list(range(1, 27)),
-        'Cli': list(range(1, 6)) + list(range(7, 41)),
-        'Closure': list(range(1, 63)) + list(range(64, 93)) + list(range(94, 177)),
-        'Codec': list(range(1, 19)),
-        'Collections': list(range(25, 29)),
-        'Compress': list(range(1, 48)),
-        'Csv': list(range(1, 17)),
-        'Gson': list(range(1, 19)),
-        'JacksonCore': list(range(1, 27)),
-        'JacksonDatabind': list(range(1, 113)),
-        'JacksonXml': list(range(1, 7)),
-        'Jsoup': list(range(1, 94)),
-        'JxPath': list(range(1, 23)),
-        'Lang': [1] + list(range(3, 66)),
-        'Math': list(range(1, 107)),
-        'Mockito': list(range(1, 39)),
-        'Time': list(range(1, 21)) + list(range(22, 28))
+        'Chart': [1]
     }
 
     for proj, list_ids in projects.items():
