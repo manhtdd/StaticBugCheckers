@@ -21,9 +21,7 @@ RUN pip3 install icecream
 WORKDIR /app
 
 # Clone the Git repository
-RUN git clone https://github.com/manhlamabc123/StaticBugCheckers && \
-    cd StaticBugCheckers && \
-    git checkout test-infer-build
+RUN git clone https://github.com/manhlamabc123/StaticBugCheckers
 
 RUN cd StaticBugCheckers && \
     git clone -q https://github.com/rjust/defects4j.git && \
