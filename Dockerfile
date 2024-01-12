@@ -22,6 +22,7 @@ WORKDIR /app
 
 # Clone the Git repository
 RUN git clone https://github.com/manhlamabc123/StaticBugCheckers && \
+    cd StaticBugCheckers && \
     git checkout test-infer-build
 
 RUN cd StaticBugCheckers && \
