@@ -35,6 +35,20 @@ def run_infer_on_proj(proj, path, path_out_txt, path_out_json, path_infer):
         
         log.write(out + "\n")
         log.write("*"*24 + "\n\n")
+
+        cmd = [path_infer, 'run', '-o', tmp_out_dir, '--keep-going', '--', 'javac']
+        if proj_javac_opts: 
+            cmd = cmd + proj_javac_opts.split(' ') + [buggy_f] 
+        else: 
+            cmd = cmd + [buggy_f]
+               
+        log.write(" ".join(cmd) + "\n\n")
+        
+        p = subprocess.Popen(cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        (out, _) = p.communicate()
+        
+        log.write(out + "\n")
+        log.write("*"*24 + "\n\n")
         
         try:
             with open(os.path.join(os.getcwd(), tmp_out_dir + '/bugs.txt'), 'r') as file:
