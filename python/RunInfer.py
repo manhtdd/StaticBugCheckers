@@ -22,7 +22,7 @@ def run_infer_on_proj(proj, path, path_out_txt, path_out_json, path_infer):
     tmp_out_dir = tempfile.mkdtemp(prefix='infer-out.', dir=os.getcwd())
     
     for buggy_f in proj_buggy_files:
-        cmd = [path_infer, 'run', '-o', tmp_out_dir, '--keep-going', '--', 'javac']
+        cmd = [path_infer, 'capture', '-o', tmp_out_dir, '--keep-going', '--', 'javac']
         if proj_javac_opts: 
             cmd = cmd + proj_javac_opts.split(' ') + ['-cp', proj_cp, buggy_f] 
         else: 
@@ -36,7 +36,7 @@ def run_infer_on_proj(proj, path, path_out_txt, path_out_json, path_infer):
         log.write(out + "\n")
         log.write("*"*24 + "\n\n")
 
-        cmd = [path_infer, 'run', '-o', tmp_out_dir, '--keep-going', '--', 'javac']
+        cmd = [path_infer, 'capture', '-o', tmp_out_dir, '--keep-going', '--', 'javac']
         if proj_javac_opts: 
             cmd = cmd + proj_javac_opts.split(' ') + [buggy_f] 
         else: 
