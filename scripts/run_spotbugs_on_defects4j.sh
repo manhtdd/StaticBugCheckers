@@ -12,7 +12,7 @@ get_abs_path() {
 }
 
 # Get the absolute paths of Infer, Error Prone, and SpotBugs binaries
-INF_BIN="$(get_abs_path `find ${CHECKERS_ROOT} -maxdepth 1 -type d -name infer-linux*`)/bin/infer"
+SB_BIN="$(get_abs_path `find ${CHECKERS_ROOT} -maxdepth 1 -type d -name spotbugs*`)/lib/spotbugs.jar"
 
 # If STUDY_ROOT directory exists, remove it and recreate it
 if [ -d ${STUDY_ROOT} ]; then rm -rf ${STUDY_ROOT}; fi
