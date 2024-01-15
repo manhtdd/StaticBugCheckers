@@ -19,9 +19,9 @@ def run_sb_on_proj(proj, path, path_out, path_sb):
     
     for buggy_f in proj_buggy_files:
         if proj_javac_opts:
-            cmd = ['javac'] + proj_javac_opts.split(' ') + ['-cp', proj_cp, buggy_f]
+            cmd = ['javac'] + proj_javac_opts.split(' ') + [buggy_f]
         else:
-            cmd = ['javac'] + ['-cp', proj_cp, buggy_f]
+            cmd = ['javac'] + [buggy_f]
         
         log.write(" ".join(cmd) + "\n\n")
         
