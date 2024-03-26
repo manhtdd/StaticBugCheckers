@@ -7,21 +7,24 @@ Created on Nov. 23, 2017
 '''
 
 import json
-import os
+import os, shutil
 
 from collections import OrderedDict, namedtuple
 from xml.etree import cElementTree as ET
-from icecream import ic
 from datetime import datetime
+from icecream import ic as logger
 
 if not os.path.exists(f'{os.getcwd()}/logs'):
     os.makedirs(f'{os.getcwd()}/logs')
 
+if not os.path.exists(f'{os.getcwd()}/outputs'):
+    os.makedirs(f'{os.getcwd()}/outputs')
+
 # Define a file to log IceCream output
-log_file_path = os.path.join(f'{os.getcwd()}/logs', 'logs.log')
+log_file_path = os.path.join(f'{os.getcwd()}/logs', f'{datetime.now().strftime("%Y-%m-%d-%H:%M:%S")}.log')
 
 # Replace logging configuration with IceCream configuration
-ic.configureOutput(prefix=f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | ', outputFunction=lambda x: open(log_file_path, 'a').write(x + '\n'))
+logger.configureOutput(prefix=' - ', outputFunction=lambda x: open(log_file_path, 'a').write(x + '\n'))
 
 
 class DataReader(object):
@@ -367,8 +370,6 @@ def prepare_tool(path, proj):
         with open(os.path.join(proj_dir, 'prop-buggy-classes')) as file:
             proj_buggy_classes = file.read().splitlines()
     except Exception as e:
-        ic(proj_dir)
-        ic(e)
         proj_src = ''
         proj_cp = ''
         proj_buggy_classes = []
@@ -392,3 +393,14 @@ def prepare_tool(path, proj):
     return proj_src, proj_cp, proj_javac_opts, proj_buggy_files, proj_buggy_classes
 
 NO_WARNING = "NO_WARNING"
+
+def copy_files(source_dir, destination_dir, paths_dict):
+    for file_name, target_path in paths_dict.items():
+        source_file = os.path.join(source_dir, file_name)
+        destination_file = os.path.join(destination_dir, target_path)
+        
+        # Create directories if they don't exist
+        os.makedirs(os.path.dirname(destination_file), exist_ok=True)
+        
+        # Copy the file
+        shutil.copy2(source_file, destination_file)

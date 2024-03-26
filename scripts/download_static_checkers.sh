@@ -23,17 +23,17 @@ mkdir $CHECKERS_ROOT
 echo ">>> Downloading and extracting static checkers <<<"
 
 # Download ErrorProne JAR file and place it in the checkers directory
-echo ">>> Preparing Google's ErrorProne"
-cd $CHECKERS_ROOT
-wget -q $EP_URL
+# echo ">>> Preparing Google's ErrorProne"
+# cd $CHECKERS_ROOT
+# wget -q $EP_URL
 
 # Download and extract Infer to the checkers directory
 echo ">>> Preparing Facebook's Infer"
 curl -sSL $INF_URL | tar -C $CHECKERS_ROOT -xJ
 
 # Download and extract SpotBugs to the checkers directory
-echo ">>> Preparing SpotBugs"
-cd $CHECKERS_ROOT
-curl -O -L $SB_URL
-tar -xzvf spotbugs-$SB_VER.tgz
-rm -rf spotbugs-$SB_VER.tgz
+# echo ">>> Preparing SpotBugs"
+# cd $CHECKERS_ROOT
+# curl -O -L $SB_URL
+# tar -xzvf spotbugs-$SB_VER.tgz
+# rm -rf spotbugs-$SB_VER.tgz
