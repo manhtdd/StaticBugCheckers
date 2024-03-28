@@ -6,7 +6,7 @@
 
 # '''
 
-import os, shutil, subprocess, tempfile
+import os, shutil, subprocess, tempfile, json
 import argparse, os
 import pandas as pd
 from Util import logger, prepare_tool
@@ -27,54 +27,73 @@ def manual_merge_json(json_strings):
     
     return ""
 
-def run_infer_on_proj(proj, path, path_out_txt, path_out_json, path_infer):
-    log = open('../outputs/inf_log', 'a')
+def run_infer_on_proj(dataframe, path_out_txt, path_out_json, args):
+    log = open(f'outputs/{"output-fixed" if args.fix else "output-buggy"}/inf_log', 'a')
+    
+    for index, row in dataframe.iterrows():
+        proj = row['vul_id']
 
-    log.write("Runnning Infer on: " + proj + "\n\n")
-    
-    _, proj_cp, proj_javac_opts, proj_buggy_files, _ = prepare_tool(path, proj)
-    
-    infer_txt_results = []
-    infer_json_results = []
-    
-    tmp_out_dir = tempfile.mkdtemp(prefix='infer-out.', dir=os.getcwd())
-    
-    for buggy_f in proj_buggy_files:
-        cmd = [path_infer, 'run', '-o', tmp_out_dir, '--keep-going', '--', 'javac']
-        if proj_javac_opts: 
-            cmd = cmd + proj_javac_opts.split(' ') + ['-cp', proj_cp, buggy_f] 
-        else: 
-            cmd = cmd + ['-cp', proj_cp, buggy_f]
-               
-        log.write(" ".join(cmd) + "\n\n")
-        
-        p = subprocess.Popen(cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        (out, _) = p.communicate()
-        
-        log.write(out + "\n")
-        log.write("*"*24 + "\n\n")
-        
-        try:
-            with open(os.path.join(os.getcwd(), tmp_out_dir + '/bugs.txt'), 'r') as file:
-                infer_txt_results.append(file.read())
-        except IOError:
-            pass
+        log.write("Runnning Infer on: " + proj + "\n\n")
 
-        try:
-            with open(os.path.join(os.getcwd(), tmp_out_dir + '/report.json'), 'r') as file:
-                infer_json_results.append(file.read().strip("\n"))
-        except IOError:
-            pass            
+        paths_dict = json.load(open(f"{args.checkout}/{proj}/VUL4J/human_patch/paths.json", 'r'))
+        proj_buggy_files = list(paths_dict.values())
 
-    shutil.rmtree(tmp_out_dir)
-    
-    with open(os.path.join(path_out_txt, proj), 'w') as file:
-        file.write("\n".join(res for res in infer_txt_results))
-    
-    with open(os.path.join(path_out_json, proj), 'w') as file:
-        file.write(manual_merge_json(infer_json_results))
-     
-    log.write("#"*212 + "\n\n")
+        infer_txt_results = []
+        infer_json_results = []
+
+        tmp_out_dir = tempfile.mkdtemp(prefix='infer-out.', dir=os.getcwd())
+
+        for buggy_f in proj_buggy_files:
+            # cmd = [path_infer, 'run', '-o', tmp_out_dir, '--keep-going', '--force-integration', row['compile_cmd'], row['cmd_options'], f"{path}/{proj}/{buggy_f}"]
+            current_dir = os.getcwd()
+            proj_dir = f"{args.checkout}/{proj}"
+            os.chdir(proj_dir)
+            # cmd = [args.infer, 'run', '-o', tmp_out_dir, "--", "mvn", f"{proj_dir}/{buggy_f}"]
+            capture_cmd = [args.infer, 'run', '-o', tmp_out_dir, '--force-integration', 'mvn', "--", "mvn compile", f"-Dmaven.compiler.includes={buggy_f}"]
+            analyze_cmd = [args.infer, 'analyze', '-o', tmp_out_dir, buggy_f]
+
+            log.write(" ".join(capture_cmd) + "\n\n")
+            
+            p = subprocess.Popen(capture_cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            (out, _) = p.communicate()
+            os.chdir(current_dir)
+            
+            log.write(out + "\n")
+            log.write("*"*24 + "\n\n")
+
+            log.write(" ".join(analyze_cmd) + "\n\n")
+            
+            p = subprocess.Popen(analyze_cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            (out, _) = p.communicate()
+            os.chdir(current_dir)
+            
+            log.write(out + "\n")
+            log.write("*"*24 + "\n\n")
+            
+            try:
+                with open(os.path.join(os.getcwd(), tmp_out_dir + '/bugs.txt'), 'r') as file:
+                    infer_txt_results.append(file.read())
+            except IOError:
+                pass
+
+            try:
+                with open(os.path.join(os.getcwd(), tmp_out_dir + '/report.json'), 'r') as file:
+                    infer_json_results.append(file.read().strip("\n"))
+            except IOError:
+                pass
+
+        # shutil.rmtree(tmp_out_dir)
+
+        with open(os.path.join(path_out_txt, proj), 'w') as file:
+            file.write("\n".join(res for res in infer_txt_results))
+
+        with open(os.path.join(path_out_json, proj), 'w') as file:
+            file.write(manual_merge_json(infer_json_results))
+            
+        log.write("#"*212 + "\n\n")
+
+        break
+
     log.close()
 
 def read_args():
@@ -82,24 +101,28 @@ def read_args():
     parser.add_argument('-dataset', help='')
     parser.add_argument('-infer', help='')
     parser.add_argument('-checkout', help='')
+    parser.add_argument('-fix', action='store_true', help='')
     return parser.parse_args()
 
 def main():
     args = read_args()
 
-    df = pd.read_csv(args.dataset)
-    vul_ids = df['vul_id'].tolist()
+    if args.fix:
+        output_folder = 'output-fixed'
+    else:
+        output_folder = 'output-buggy'
 
-    path_out_txt = "../outputs/inf_output_txt"
+    df = pd.read_csv(args.dataset)
+
+    path_out_txt = f"outputs/{output_folder}/inf_output_txt"
     if not os.path.isdir(path_out_txt):
         os.makedirs(path_out_txt)
         
-    path_out_json = "../outputs/inf_output_json"
+    path_out_json = f"outputs/{output_folder}/inf_output_json"
     if not os.path.isdir(path_out_json):
         os.makedirs(path_out_json)
 
-    for id in vul_ids:
-        run_infer_on_proj(id, args.checkout, "../outputs/inf_output_txt", "../outputs/inf_output_json", args.infer)
+    run_infer_on_proj(df, path_out_txt, path_out_json, args)
 
 
 if __name__ == "__main__":

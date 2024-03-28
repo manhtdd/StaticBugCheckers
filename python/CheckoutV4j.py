@@ -36,5 +36,11 @@ def main():
                 copy_files(human_patch_dir, f"/tmp/vul4j/fix/{dir_name}", paths_dict)
         break
 
+    for id in vul4j_ids:
+        cmd = ["vul4j", "compile", "-d", f"/tmp/vul4j/vul/{id}"]
+        cmd = ["vul4j", "compile", "-d", f"/tmp/vul4j/fix/{id}"]
+        subprocess.run(cmd)
+        break
+
 if __name__ == "__main__":
     main()
