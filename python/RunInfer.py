@@ -44,28 +44,19 @@ def run_infer_on_proj(dataframe, path_out_txt, path_out_json, args):
         tmp_out_dir = tempfile.mkdtemp(prefix='infer-out.', dir=os.getcwd())
 
         for buggy_f in proj_buggy_files:
-            # cmd = [path_infer, 'run', '-o', tmp_out_dir, '--keep-going', '--force-integration', row['compile_cmd'], row['cmd_options'], f"{path}/{proj}/{buggy_f}"]
-            current_dir = os.getcwd()
             proj_dir = f"{args.checkout}/{proj}"
-            os.chdir(proj_dir)
-            # cmd = [args.infer, 'run', '-o', tmp_out_dir, "--", "mvn", f"{proj_dir}/{buggy_f}"]
-            capture_cmd = [args.infer, 'run', '-o', tmp_out_dir, '--force-integration', 'mvn', "--", "mvn compile", f"-Dmaven.compiler.includes={buggy_f}"]
-            analyze_cmd = [args.infer, 'analyze', '-o', tmp_out_dir, buggy_f]
 
-            log.write(" ".join(capture_cmd) + "\n\n")
-            
-            p = subprocess.Popen(capture_cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            (out, _) = p.communicate()
-            os.chdir(current_dir)
-            
-            log.write(out + "\n")
-            log.write("*"*24 + "\n\n")
+            package_jar_file_paths = prepare_tool(proj_dir)
+            if len(package_jar_file_paths) != 1:
+                print(proj_dir, "fail to package")
+                continue
 
-            log.write(" ".join(analyze_cmd) + "\n\n")
+            cmd = [args.infer, 'run', '-o', tmp_out_dir, "--", "javac", "-cp", package_jar_file_paths[0], "-d", tmp_out_dir, f"{proj_dir}/{buggy_f}"]
+
+            log.write(" ".join(cmd) + "\n\n")
             
-            p = subprocess.Popen(analyze_cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            p = subprocess.Popen(cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             (out, _) = p.communicate()
-            os.chdir(current_dir)
             
             log.write(out + "\n")
             log.write("*"*24 + "\n\n")
@@ -82,7 +73,7 @@ def run_infer_on_proj(dataframe, path_out_txt, path_out_json, args):
             except IOError:
                 pass
 
-        # shutil.rmtree(tmp_out_dir)
+        shutil.rmtree(tmp_out_dir)
 
         with open(os.path.join(path_out_txt, proj), 'w') as file:
             file.write("\n".join(res for res in infer_txt_results))
@@ -91,8 +82,6 @@ def run_infer_on_proj(dataframe, path_out_txt, path_out_json, args):
             file.write(manual_merge_json(infer_json_results))
             
         log.write("#"*212 + "\n\n")
-
-        break
 
     log.close()
 

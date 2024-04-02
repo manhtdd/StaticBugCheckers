@@ -355,42 +355,14 @@ def get_cls_name_from_file_path(cls_path):
     return cls
 
 
-def prepare_tool(path, proj):
-        
-    proj_dir = os.path.join(path, proj)
-
-    try:
-        with open(os.path.join(proj_dir, 'prop-source-dir')) as file:
-            proj_src = file.read()
-        proj_src = os.path.join(proj_dir, proj_src)
-        
-        with open(os.path.join(proj_dir, 'prop-compile-path')) as file:
-            proj_cp = file.read()
-        
-        with open(os.path.join(proj_dir, 'prop-buggy-classes')) as file:
-            proj_buggy_classes = file.read().splitlines()
-    except Exception as e:
-        proj_src = ''
-        proj_cp = ''
-        proj_buggy_classes = []
-    
-    try:
-        with open(os.path.join(proj_dir, 'prop-exclude-classes')) as file:
-            proj_exclude_classes = file.read().splitlines()
-    except IOError:
-        proj_exclude_classes = []
-    
-    proj_buggy_classes = set(proj_buggy_classes) - set(proj_exclude_classes)
-    
-    proj_buggy_files = map(lambda f: os.path.join(proj_src, f.replace('.', '/') + '.java'), proj_buggy_classes)
-    
-    try:
-        with open(os.path.join(proj_dir, 'prop-javac-options')) as file:
-            proj_javac_opts = file.read()
-    except IOError:
-        proj_javac_opts = ""
-        
-    return proj_src, proj_cp, proj_javac_opts, proj_buggy_files, proj_buggy_classes
+def prepare_tool(root_dir):
+    keyword = "SNAPSHOT.jar"
+    found_files = []
+    for root, dirs, files in os.walk(root_dir):
+        for file in files:
+            if keyword in file:
+                found_files.append(os.path.join(root, file))
+    return found_files
 
 NO_WARNING = "NO_WARNING"
 

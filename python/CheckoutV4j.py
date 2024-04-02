@@ -1,11 +1,17 @@
 import argparse, subprocess, shutil, os, json
 import pandas as pd
 from Util import copy_files, logger
+import subprocess
+from concurrent.futures import ThreadPoolExecutor
 
 def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-dataset', help='')
     return parser.parse_args()
+
+def package_vul4j(id):
+    subprocess.run(["vul4j", "compile", "-d", f"/tmp/vul4j/vul/{id}"])
+    subprocess.run(["vul4j", "compile", "-d", f"/tmp/vul4j/fix/{id}"])
 
 def main():
     args = read_args()
@@ -36,11 +42,8 @@ def main():
                 copy_files(human_patch_dir, f"/tmp/vul4j/fix/{dir_name}", paths_dict)
         break
 
-    for id in vul4j_ids:
-        cmd = ["vul4j", "compile", "-d", f"/tmp/vul4j/vul/{id}"]
-        cmd = ["vul4j", "compile", "-d", f"/tmp/vul4j/fix/{id}"]
-        subprocess.run(cmd)
-        break
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        executor.map(package_vul4j, vul4j_ids)
 
 if __name__ == "__main__":
     main()
