@@ -10,8 +10,8 @@ def read_args():
     return parser.parse_args()
 
 def package_vul4j(id):
-    subprocess.run(["vul4j", "compile", "-d", f"/tmp/vul4j/vul/{id}"])
-    subprocess.run(["vul4j", "compile", "-d", f"/tmp/vul4j/fix/{id}"])
+    subprocess.run(["vul4j", "package", "-d", f"/tmp/vul4j/vul/{id}"])
+    subprocess.run(["vul4j", "package", "-d", f"/tmp/vul4j/fix/{id}"])
 
 def main():
     args = read_args()
