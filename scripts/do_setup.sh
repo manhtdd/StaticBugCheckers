@@ -12,7 +12,7 @@ echo "**************************************************************************
 
 bash ./scripts/download_static_checkers.sh
 
-bash ./scripts/download_defects4j.sh
+bash ./scripts/download_vul4j.sh
 
 echo
 echo "*************************"

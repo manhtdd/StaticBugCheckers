@@ -15,6 +15,10 @@ from unidiff import PatchSet
 from vul4j.config import JAVA7_HOME, MVN_OPTS, JAVA8_HOME, OUTPUT_FOLDER_NAME, ENABLE_EXECUTING_LOGS, DATASET_PATH, \
     BENCHMARK_PATH, PROJECT_REPOS_ROOT_PATH, REPRODUCTION_DIR, VUL4J_COMMITS_URL
 
+# Configure infer absolute path
+INFER_PATH = "/StaticBugCheckers/static-checkers/infer-linux64-v1.0.0/bin/infer"
+INFER_OUT = "/StaticBugCheckers/infer-outs"
+
 FNULL = open(os.devnull, 'w')
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
@@ -26,7 +30,6 @@ handler.setFormatter(formatter)
 root.addHandler(handler)
 
 WORK_DIR = "/tmp/vul4j/reproduction"
-
 
 def extract_failed_tests_from_test_results(test_results):
     failing_tests = set()
@@ -342,10 +345,24 @@ export MAVEN_OPTS="%s";
             cmd = cmd[:-1]  # remove comma
             cmd += " " + cmd_options + ';'
 
-        log_path = os.path.join(output_dir, OUTPUT_FOLDER_NAME, "compile.log")
+        # Capture phase
+        cmd = [INFER_PATH, "--project-root", output_dir, "-o", INFER_OUT, "capture", "--", cmd]
+
+        log_path = os.path.join(output_dir, OUTPUT_FOLDER_NAME, "package.log")
         stdout = open(log_path, "w", encoding="utf-8") if ENABLE_EXECUTING_LOGS == "1" else FNULL
         ret = subprocess.call(cmd, shell=True, stdout=stdout, stderr=subprocess.STDOUT)
-        with (open(os.path.join(output_dir, OUTPUT_FOLDER_NAME, "compile_result.txt"), "w")) as f:
+        with (open(os.path.join(output_dir, OUTPUT_FOLDER_NAME, "package_result.txt"), "w")) as f:
+            f.write("1" if ret == 0 else "0")
+        if ret == 1:
+            return ret
+
+        # Analyze phase
+        cmd = [INFER_PATH, "--project-root", output_dir, "-o", INFER_OUT, "analyze"]
+
+        log_path = os.path.join(output_dir, OUTPUT_FOLDER_NAME, "package.log")
+        stdout = open(log_path, "w", encoding="utf-8") if ENABLE_EXECUTING_LOGS == "1" else FNULL
+        ret = subprocess.call(cmd, shell=True, stdout=stdout, stderr=subprocess.STDOUT)
+        with (open(os.path.join(output_dir, OUTPUT_FOLDER_NAME, "package_result.txt"), "w")) as f:
             f.write("1" if ret == 0 else "0")
         return ret
 
