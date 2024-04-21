@@ -328,17 +328,19 @@ export MAVEN_OPTS="%s";
         return ret
     
     def package(self, output_dir):
+        if os.path.exists(os.path.join(output_dir, 'infer-out')):
+            shutil.rmtree(os.path.join(output_dir, 'infer-out'))
+
         vul = self.read_vulnerability_from_output_dir(output_dir)
 
         java_home = JAVA7_HOME if vul['compliance_level'] <= 7 else JAVA8_HOME
 
         package_command = 'mvn -DskipTests clean package' if vul['build_system'] == 'Maven' else './gradlew clean assemble'
 
-        cmd = """cd %s;
-export JAVA_HOME="%s";
+        cmd = """export JAVA_HOME="%s";
 export _JAVA_OPTIONS=-Djdk.net.URLClassPath.disableClassPathURLCheck=true;
 export MAVEN_OPTS="%s";
-%s;""" % (output_dir, java_home, MVN_OPTS, package_command)
+%s capture -- %s;""" % (java_home, MVN_OPTS, INFER_PATH, package_command)
 
         cmd_options = vul['cmd_options']
         if cmd_options:
@@ -346,24 +348,14 @@ export MAVEN_OPTS="%s";
             cmd += " " + cmd_options + ';'
 
         # Capture phase
-        cmd = [INFER_PATH, "--project-root", output_dir, "-o", INFER_OUT, "capture", "--", cmd]
-
-        log_path = os.path.join(output_dir, OUTPUT_FOLDER_NAME, "package.log")
-        stdout = open(log_path, "w", encoding="utf-8") if ENABLE_EXECUTING_LOGS == "1" else FNULL
-        ret = subprocess.call(cmd, shell=True, stdout=stdout, stderr=subprocess.STDOUT)
-        with (open(os.path.join(output_dir, OUTPUT_FOLDER_NAME, "package_result.txt"), "w")) as f:
-            f.write("1" if ret == 0 else "0")
+        ret = subprocess.call(cmd, cwd= output_dir, shell=True)
         if ret == 1:
             return ret
 
         # Analyze phase
-        cmd = [INFER_PATH, "--project-root", output_dir, "-o", INFER_OUT, "analyze"]
+        cmd = f"{INFER_PATH} analyze"
 
-        log_path = os.path.join(output_dir, OUTPUT_FOLDER_NAME, "package.log")
-        stdout = open(log_path, "w", encoding="utf-8") if ENABLE_EXECUTING_LOGS == "1" else FNULL
-        ret = subprocess.call(cmd, shell=True, stdout=stdout, stderr=subprocess.STDOUT)
-        with (open(os.path.join(output_dir, OUTPUT_FOLDER_NAME, "package_result.txt"), "w")) as f:
-            f.write("1" if ret == 0 else "0")
+        ret = subprocess.call(cmd, cwd= output_dir, shell=True)
         return ret
 
     def test(self, output_dir, batch_type, print_out=True):
