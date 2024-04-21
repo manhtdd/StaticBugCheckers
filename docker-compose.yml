@@ -1,0 +1,12 @@
+services:
+  static-bug-checker:
+    container_name: static-bug-checker
+    image: static-bug-checker:vul4j
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/StaticBugCheckers
+      - ./vul4j:/vul4j/vul4j
+    stdin_open: true
+    tty: true
