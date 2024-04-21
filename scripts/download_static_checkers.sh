@@ -6,7 +6,7 @@
 
 # Set versions for ErrorProne, Infer, and SpotBugs
 EP_VER="2.3.1"
-INF_VER="1.1.0"
+INF_VER="1.0.0"
 SB_VER="4.8.2"
 
 # Set URLs for downloading ErrorProne, Infer, and SpotBugs

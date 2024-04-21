@@ -15,6 +15,10 @@ from unidiff import PatchSet
 from vul4j.config import JAVA7_HOME, MVN_OPTS, JAVA8_HOME, OUTPUT_FOLDER_NAME, ENABLE_EXECUTING_LOGS, DATASET_PATH, \
     BENCHMARK_PATH, PROJECT_REPOS_ROOT_PATH, REPRODUCTION_DIR, VUL4J_COMMITS_URL
 
+# Configure infer absolute path
+INFER_PATH = "/StaticBugCheckers/static-checkers/infer-linux64-v1.0.0/bin/infer"
+INFER_OUT = "/StaticBugCheckers/infer-outs"
+
 FNULL = open(os.devnull, 'w')
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
@@ -26,7 +30,6 @@ handler.setFormatter(formatter)
 root.addHandler(handler)
 
 WORK_DIR = "/tmp/vul4j/reproduction"
-
 
 def extract_failed_tests_from_test_results(test_results):
     failing_tests = set()
@@ -325,28 +328,34 @@ export MAVEN_OPTS="%s";
         return ret
     
     def package(self, output_dir):
+        if os.path.exists(os.path.join(output_dir, 'infer-out')):
+            shutil.rmtree(os.path.join(output_dir, 'infer-out'))
+
         vul = self.read_vulnerability_from_output_dir(output_dir)
 
         java_home = JAVA7_HOME if vul['compliance_level'] <= 7 else JAVA8_HOME
 
         package_command = 'mvn -DskipTests clean package' if vul['build_system'] == 'Maven' else './gradlew clean assemble'
 
-        cmd = """cd %s;
-export JAVA_HOME="%s";
+        cmd = """export JAVA_HOME="%s";
 export _JAVA_OPTIONS=-Djdk.net.URLClassPath.disableClassPathURLCheck=true;
 export MAVEN_OPTS="%s";
-%s;""" % (output_dir, java_home, MVN_OPTS, package_command)
+%s capture -- %s;""" % (java_home, MVN_OPTS, INFER_PATH, package_command)
 
         cmd_options = vul['cmd_options']
         if cmd_options:
             cmd = cmd[:-1]  # remove comma
             cmd += " " + cmd_options + ';'
 
-        log_path = os.path.join(output_dir, OUTPUT_FOLDER_NAME, "compile.log")
-        stdout = open(log_path, "w", encoding="utf-8") if ENABLE_EXECUTING_LOGS == "1" else FNULL
-        ret = subprocess.call(cmd, shell=True, stdout=stdout, stderr=subprocess.STDOUT)
-        with (open(os.path.join(output_dir, OUTPUT_FOLDER_NAME, "compile_result.txt"), "w")) as f:
-            f.write("1" if ret == 0 else "0")
+        # Capture phase
+        ret = subprocess.call(cmd, cwd= output_dir, shell=True)
+        if ret == 1:
+            return ret
+
+        # Analyze phase
+        cmd = f"{INFER_PATH} analyze"
+
+        ret = subprocess.call(cmd, cwd= output_dir, shell=True)
         return ret
 
     def test(self, output_dir, batch_type, print_out=True):
