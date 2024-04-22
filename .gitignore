@@ -109,3 +109,6 @@ static-checkers
 defects4j
 logs
 outputs
+
+vul4j/__init__.py
+vul4j/config.py

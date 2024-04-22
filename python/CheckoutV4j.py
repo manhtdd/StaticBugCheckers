@@ -2,7 +2,6 @@ import argparse, subprocess, shutil, os, json
 import pandas as pd
 from Util import copy_files, logger
 import subprocess
-from concurrent.futures import ThreadPoolExecutor
 
 def read_args():
     parser = argparse.ArgumentParser()
@@ -42,8 +41,13 @@ def main():
                 copy_files(human_patch_dir, f"/tmp/vul4j/fix/{dir_name}", paths_dict)
         break
 
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        executor.map(package_vul4j, vul4j_ids)
+    import concurrent.futures as cf
+    futures = []
+    with cf.ProcessPoolExecutor(max_workers=2) as pp:
+        for id in vul4j_ids:
+            futures.append(pp.submit(package_vul4j, id))
+    for future in cf.as_completed(futures):
+         future.result()
 
 if __name__ == "__main__":
     main()
