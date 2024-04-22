@@ -33,13 +33,18 @@ def manual_merge_json(json_strings):
     
     return ""
 
-def run_infer_on_proj(dataframe, path_out_txt, path_out_json, args):
+def run_infer_on_proj(dataframe, result_df, path_out_txt, path_out_json, args):
     log_capture = open(f'outputs/{"output-fixed" if args.fix else "output-buggy"}/inf_capture_log', 'a')
     log_analyze = open(f'outputs/{"output-fixed" if args.fix else "output-buggy"}/inf_analyze_log', 'a')
     row_list = []
+    ran_list = result_df['vul_id'].to_list()
+    print(ran_list)
     
     for _, row in dataframe.iterrows():
         proj = row['vul_id']
+
+        if proj in ran_list:
+            continue
 
         analyze_row = {'vul_id': proj}
 
@@ -141,6 +146,7 @@ def run_infer_on_proj(dataframe, path_out_txt, path_out_json, args):
 def read_args():
     parser = argparse.ArgumentParser(description='Process JSON data.')
     parser.add_argument('-dataset', help='')
+    parser.add_argument('-result', help='')
     parser.add_argument('-infer', help='')
     parser.add_argument('-checkout', help='')
     parser.add_argument('-fix', action='store_true', help='')
@@ -155,6 +161,7 @@ def main():
         output_folder = 'output-buggy'
 
     df = pd.read_csv(args.dataset)
+    result_df = pd.read_csv(args.result)
 
     path_out_txt = f"outputs/{output_folder}/inf_output_txt"
     if not os.path.isdir(path_out_txt):
@@ -164,7 +171,7 @@ def main():
     if not os.path.isdir(path_out_json):
         os.makedirs(path_out_json)
 
-    run_infer_on_proj(df, path_out_txt, path_out_json, args)
+    run_infer_on_proj(df, result_df, path_out_txt, path_out_json, args)
 
 
 if __name__ == "__main__":
