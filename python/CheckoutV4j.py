@@ -8,10 +8,6 @@ def read_args():
     parser.add_argument('-dataset', help='')
     return parser.parse_args()
 
-def package_vul4j(id):
-    subprocess.run(["vul4j", "package", "-d", f"/tmp/vul4j/vul/{id}"])
-    subprocess.run(["vul4j", "package", "-d", f"/tmp/vul4j/fix/{id}"])
-
 def main():
     args = read_args()
 
@@ -40,14 +36,6 @@ def main():
                 # Copy files
                 copy_files(human_patch_dir, f"/tmp/vul4j/fix/{dir_name}", paths_dict)
         break
-
-    import concurrent.futures as cf
-    futures = []
-    with cf.ProcessPoolExecutor(max_workers=2) as pp:
-        for id in vul4j_ids:
-            futures.append(pp.submit(package_vul4j, id))
-    for future in cf.as_completed(futures):
-         future.result()
 
 if __name__ == "__main__":
     main()
