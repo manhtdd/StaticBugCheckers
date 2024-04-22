@@ -38,7 +38,6 @@ def run_infer_on_proj(dataframe, result_df, path_out_txt, path_out_json, args):
     log_analyze = open(f'outputs/{"output-fixed" if args.fix else "output-buggy"}/inf_analyze_log', 'a')
     row_list = []
     ran_list = result_df['vul_id'].to_list()
-    print(ran_list)
     
     for _, row in dataframe.iterrows():
         proj = row['vul_id']
