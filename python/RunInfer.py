@@ -11,6 +11,7 @@ import argparse, os
 import pandas as pd
 from Util import logger
 from os.path import expanduser
+import math
 
 JAVA7_HOME = os.environ.get("JAVA7_HOME", expanduser("/Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home"))
 JAVA8_HOME = os.environ.get("JAVA8_HOME", expanduser("/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home"))
@@ -84,7 +85,7 @@ def run_infer_on_proj(dataframe, result_df, path_out_txt, path_out_json, args):
         #        f"{INFER_PATH} capture -- {package_command};"]
 
         cmd_options = row['cmd_options']
-        if cmd_options:
+        if not math.isnan(cmd_options):
             cmd = cmd[:-1]  # remove comma
             cmd += " " + cmd_options + ';'
 
@@ -160,7 +161,10 @@ def main():
         output_folder = 'output-buggy'
 
     df = pd.read_csv(args.dataset)
-    result_df = pd.read_csv(args.result)
+    try:
+        result_df = pd.read_csv(args.result)
+    except:
+        result_df = pd.DataFrame(columns=["vul_id"])
 
     path_out_txt = f"outputs/{output_folder}/inf_output_txt"
     if not os.path.isdir(path_out_txt):
