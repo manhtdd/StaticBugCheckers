@@ -109,3 +109,5 @@ static-checkers
 defects4j
 logs
 outputs
+
+VUL4J*
