@@ -11,7 +11,6 @@ import argparse, os
 import pandas as pd
 from Util import logger
 from os.path import expanduser
-import math
 
 JAVA7_HOME = os.environ.get("JAVA7_HOME", expanduser("/Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home"))
 JAVA8_HOME = os.environ.get("JAVA8_HOME", expanduser("/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home"))
