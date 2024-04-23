@@ -143,7 +143,7 @@ def run_infer_on_proj(dataframe, result_df, path_out_txt, path_out_json, args):
 
         row_list.append(analyze_row)
         _dataframe = pd.DataFrame.from_records(row_list)
-        _dataframe.to_csv("outputs/results.csv", index=None)
+        _dataframe.to_csv(f'outputs/{"output-fixed" if args.fix else "output-buggy"}/results.csv', index=None)
 
     log_capture.close()
     log_analyze.close()
