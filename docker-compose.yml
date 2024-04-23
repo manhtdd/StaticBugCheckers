@@ -7,6 +7,5 @@ services:
       dockerfile: Dockerfile
     volumes:
       - .:/StaticBugCheckers
-      - ./vul4j:/vul4j/vul4j
     stdin_open: true
     tty: true
