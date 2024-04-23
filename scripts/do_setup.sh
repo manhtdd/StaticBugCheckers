@@ -12,6 +12,10 @@ echo "**************************************************************************
 
 bash ./scripts/download_static_checkers.sh
 
+cd /vul4j
+python3 setup.py develop
+cd /StaticBugCheckers
+
 bash ./scripts/download_vul4j.sh
 
 echo
