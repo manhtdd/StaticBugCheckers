@@ -85,7 +85,7 @@ def run_infer_on_proj(dataframe, result_df, path_out_txt, path_out_json, args):
         #        f"{INFER_PATH} capture -- {package_command};"]
 
         cmd_options = row['cmd_options']
-        if not math.isnan(cmd_options):
+        if not isinstance(cmd_options, str) and not math.isnan(cmd_options):
             cmd = cmd[:-1]  # remove comma
             cmd += " " + cmd_options + ';'
 
